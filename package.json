@@ -76,6 +76,6 @@
     "dev": "ray develop",
     "lint": "ray lint",
     "fix-lint": "ray lint --fix",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts"
+    "test": "TZ=Europe/Berlin node --experimental-strip-types --test src/lib/*.test.ts"
   }
 }

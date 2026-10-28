@@ -4,10 +4,13 @@ import { test } from "node:test";
 import {
   checkApiUrl,
   createPayload,
+  deadlineError,
+  deadlinePresets,
   describeError,
   formatMinutes,
   formatWhen,
   reopenStatus,
+  resolveDeadline,
   savedMessage,
   startByState,
   type Course,
@@ -157,4 +160,47 @@ test("dates relative to today in local time", () => {
   assert.equal(formatWhen("2026-11-03T08:00:00Z", NOW, BERLIN), "gestern 09:00");
   assert.equal(formatWhen("2026-11-06T22:59:00Z", NOW, BERLIN), "Fr, 6. Nov. 23:59");
   assert.equal(formatWhen("2027-03-01T08:00:00Z", NOW, BERLIN), "Mo, 1. März 09:00");
+});
+
+// --- Deadline -----------------------------------------------------------------------
+// npm test läuft mit TZ=Europe/Berlin, damit „23:59 Ortszeit“ feststeht
+
+test("deadline presets like the web app", () => {
+  // Mittwoch, 4. Nov. 2026
+  assert.deepEqual(
+    deadlinePresets(NOW).map((preset) => preset.title),
+    ["Heute 23:59", "Morgen 23:59", "Fr, 6. Nov. 23:59", "Mi, 11. Nov. 23:59"],
+  );
+  assert.equal(deadlinePresets(NOW)[0].value, "2026-11-04T22:59:00.000Z");
+});
+
+test("deadline presets drop duplicates", () => {
+  // Donnerstag: morgen ist Freitag
+  const thursday = new Date("2026-11-05T11:00:00Z");
+  assert.deepEqual(
+    deadlinePresets(thursday).map((preset) => preset.title),
+    ["Heute 23:59", "Morgen 23:59", "Do, 12. Nov. 23:59"],
+  );
+});
+
+test("on friday the next friday is a week ahead", () => {
+  const friday = new Date("2026-11-06T11:00:00Z");
+  assert.deepEqual(
+    deadlinePresets(friday).map((preset) => preset.title),
+    ["Heute 23:59", "Morgen 23:59", "Fr, 13. Nov. 23:59"],
+  );
+});
+
+test("deadline choice resolves to a date", () => {
+  const custom = new Date("2026-12-01T09:00:00Z");
+  assert.equal(resolveDeadline("", custom), null);
+  assert.equal(resolveDeadline("custom", custom), custom);
+  assert.equal(resolveDeadline("custom", null), null);
+  assert.deepEqual(resolveDeadline("2026-11-04T22:59:00.000Z", null), new Date("2026-11-04T22:59:00Z"));
+});
+
+test("past deadline is rejected", () => {
+  assert.equal(deadlineError(new Date("2026-11-03T10:00:00Z"), NOW), "Liegt in der Vergangenheit");
+  assert.equal(deadlineError(new Date("2026-11-05T10:00:00Z"), NOW), undefined);
+  assert.equal(deadlineError(null, NOW), undefined);
 });

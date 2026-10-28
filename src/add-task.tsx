@@ -16,11 +16,18 @@ import { usePromise } from "@raycast/utils";
 import { useEffect, useState } from "react";
 
 import { createTask, getSuggestion, listCourses } from "./api";
-import { createPayload, ESTIMATE_PRESETS, formatMinutes, savedMessage } from "./lib/core";
+import {
+  createPayload,
+  deadlineError,
+  deadlinePresets,
+  ESTIMATE_PRESETS,
+  formatMinutes,
+  resolveDeadline,
+  savedMessage,
+} from "./lib/core";
 
 type Values = {
   title: string;
-  deadline: Date | null;
   estimate: string;
   notes: string;
 };
@@ -38,6 +45,11 @@ export function AddTaskForm({ onCreated }: { onCreated?: () => void }) {
   const [courseId, setCourseId] = useState("");
   const [courseTouched, setCourseTouched] = useState(false);
   const [titleError, setTitleError] = useState<string | undefined>();
+  // Deadline: "" = keine, ISO-Text = Schnellwahl, "custom" = Datumsfeld darunter
+  const [deadlineChoice, setDeadlineChoice] = useState("");
+  const [customDeadline, setCustomDeadline] = useState<Date | null>(null);
+  const [deadlineProblem, setDeadlineProblem] = useState<string | undefined>();
+  const [presets] = useState(() => deadlinePresets(new Date()));
 
   // Vorschlag übernehmen, sobald er da ist, aber keine Auswahl überschreiben
   useEffect(() => {
@@ -49,9 +61,15 @@ export function AddTaskForm({ onCreated }: { onCreated?: () => void }) {
       setTitleError("Titel fehlt");
       return;
     }
+    const deadline = resolveDeadline(deadlineChoice, customDeadline);
+    const problem = deadlineError(deadline, new Date());
+    if (problem) {
+      setDeadlineProblem(problem);
+      return;
+    }
     const toast = await showToast({ style: Toast.Style.Animated, title: "Speichern …" });
     try {
-      const task = await createTask(createPayload({ ...values, courseId }, suggestion));
+      const task = await createTask(createPayload({ ...values, courseId, deadline }, suggestion));
       const message = savedMessage(task, courses);
       if (onCreated) {
         toast.style = Toast.Style.Success;
@@ -111,7 +129,37 @@ export function AddTaskForm({ onCreated }: { onCreated?: () => void }) {
         <Form.Dropdown.Item value="" title="Kein Fach" icon={Icon.Circle} />
       </Form.Dropdown>
       {suggestionChosen && <Form.Description text={`Gehört zu ${suggestion.event_title}`} />}
-      <Form.DatePicker id="deadline" title="Deadline" type={Form.DatePicker.Type.DateTime} />
+      <Form.Dropdown
+        id="deadlineChoice"
+        title="Deadline"
+        value={deadlineChoice}
+        // Schnellwahl, die inzwischen vorbei ist (Formular über Mitternacht offen)
+        error={deadlineChoice === "custom" ? undefined : deadlineProblem}
+        onChange={(value) => {
+          setDeadlineChoice(value);
+          setDeadlineProblem(undefined);
+        }}
+      >
+        <Form.Dropdown.Item value="" title="Keine" />
+        {presets.map((preset) => (
+          <Form.Dropdown.Item key={preset.value} value={preset.value} title={preset.title} />
+        ))}
+        <Form.Dropdown.Item value="custom" title="Anderes Datum …" icon={Icon.Calendar} />
+      </Form.Dropdown>
+      {deadlineChoice === "custom" && (
+        <Form.DatePicker
+          id="customDeadline"
+          title="Datum"
+          type={Form.DatePicker.Type.DateTime}
+          min={startOfToday()}
+          value={customDeadline}
+          error={deadlineProblem}
+          onChange={(value) => {
+            setCustomDeadline(value);
+            setDeadlineProblem(undefined);
+          }}
+        />
+      )}
       <Form.Dropdown id="estimate" title="Dauer" defaultValue="">
         <Form.Dropdown.Item value="" title="Keine Angabe" />
         {ESTIMATE_PRESETS.map((minutes) => (
@@ -121,6 +169,11 @@ export function AddTaskForm({ onCreated }: { onCreated?: () => void }) {
       <Form.TextArea id="notes" title="Notizen" placeholder="Details, Links, Aufgabennummern" />
     </Form>
   );
+}
+
+function startOfToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
 export default function Command() {

@@ -183,3 +183,35 @@ export function formatWhen(iso: string, now: Date, timeZone?: string): string {
   const weekday = WEEKDAYS[new Date(Date.UTC(target.year, target.month - 1, target.day)).getUTCDay()];
   return `${weekday}, ${target.day}. ${MONTHS[target.month - 1]} ${clock}`;
 }
+
+export type DeadlinePreset = { title: string; value: string };
+
+/** Schnellwahl wie in der Web-App: heute, morgen, nächster Freitag, in einer Woche,
+ *  jeweils 23:59 Ortszeit (Zeitzone des Macs). value ist der Zeitpunkt als ISO-Text. */
+export function deadlinePresets(now: Date): DeadlinePreset[] {
+  const fridayOffset = (5 - now.getDay() + 7) % 7 || 7;
+  const presets = new Map<string, DeadlinePreset>();
+  for (const offset of [0, 1, fridayOffset, 7]) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 23, 59);
+    if (day <= now) continue;
+    const label = formatWhen(day.toISOString(), now);
+    // Doppelte (z. B. morgen ist Freitag) nur einmal
+    presets.set(day.toISOString(), {
+      title: label[0].toUpperCase() + label.slice(1),
+      value: day.toISOString(),
+    });
+  }
+  return [...presets.values()];
+}
+
+/** Dropdown "deadline" ("" = keine, "custom" = Datumsfeld, sonst ISO) → Zeitpunkt. */
+export function resolveDeadline(choice: string, custom: Date | null): Date | null {
+  if (choice === "") return null;
+  if (choice === "custom") return custom;
+  return new Date(choice);
+}
+
+/** Fehlertext für eine Deadline, die schon vorbei ist, sonst undefined. */
+export function deadlineError(deadline: Date | null, now: Date): string | undefined {
+  return deadline && deadline.getTime() < now.getTime() ? "Liegt in der Vergangenheit" : undefined;
+}
