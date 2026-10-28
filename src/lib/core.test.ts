@@ -6,6 +6,8 @@ import {
   createPayload,
   deadlineError,
   deadlinePresets,
+  estimateOptions,
+  initialDeadlineChoice,
   describeError,
   formatMinutes,
   formatWhen,
@@ -13,6 +15,8 @@ import {
   resolveDeadline,
   savedMessage,
   startByState,
+  updatedMessage,
+  updatePayload,
   type Course,
   type FormValues,
   type Suggestion,
@@ -203,4 +207,49 @@ test("past deadline is rejected", () => {
   assert.equal(deadlineError(new Date("2026-11-03T10:00:00Z"), NOW), "Liegt in der Vergangenheit");
   assert.equal(deadlineError(new Date("2026-11-05T10:00:00Z"), NOW), undefined);
   assert.equal(deadlineError(null, NOW), undefined);
+});
+
+// --- Bearbeiten / Einsortieren --------------------------------------------------------
+
+test("edit sends every field, empty ones as null", () => {
+  assert.deepEqual(updatePayload(form({ courseId: "3" })), {
+    title: "Pumping-Lemma",
+    course_id: 3,
+    deadline: null,
+    estimate_minutes: null,
+    notes: null,
+  });
+  assert.deepEqual(
+    updatePayload(form({ deadline: new Date("2026-11-06T22:59:00Z"), estimate: "45", notes: " x " })),
+    {
+      title: "Pumping-Lemma",
+      course_id: null,
+      deadline: "2026-11-06T22:59:00.000Z",
+      estimate_minutes: 45,
+      notes: "x",
+    },
+  );
+});
+
+test("message after sorting in", () => {
+  const before = task();
+  assert.equal(updatedMessage(before, task({ course_id: 3, status: "open" }), [AFE]), "Einsortiert in AFE");
+  assert.equal(updatedMessage(before, task({ title: "Neu" }), [AFE]), "Gespeichert");
+  assert.equal(
+    updatedMessage(task({ course_id: 3, status: "open" }), task({ course_id: 3, status: "open" }), [AFE]),
+    "Gespeichert",
+  );
+});
+
+test("existing deadline picks its preset or the date field", () => {
+  const presets = deadlinePresets(NOW);
+  assert.equal(initialDeadlineChoice(null, presets), "");
+  assert.equal(initialDeadlineChoice("2026-11-06T22:59:00Z", presets), presets[2].value);
+  assert.equal(initialDeadlineChoice("2026-12-24T12:00:00Z", presets), "custom");
+});
+
+test("unusual saved estimate stays selectable", () => {
+  assert.deepEqual(estimateOptions(null), [15, 30, 45, 60, 90, 120, 180]);
+  assert.deepEqual(estimateOptions(60), [15, 30, 45, 60, 90, 120, 180]);
+  assert.deepEqual(estimateOptions(50), [15, 30, 45, 50, 60, 90, 120, 180]);
 });

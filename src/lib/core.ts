@@ -47,6 +47,16 @@ export type TaskCreate = {
   notes?: string;
 };
 
+// PATCH /api/tasks/{id}: nur mitgeschickte Felder ändern sich, null löscht einen Wert
+export type TaskUpdate = {
+  title?: string;
+  status?: TaskStatus;
+  course_id?: number | null;
+  deadline?: string | null;
+  estimate_minutes?: number | null;
+  notes?: string | null;
+};
+
 export type FormValues = {
   title: string;
   // Dropdown-Wert: ID als Text, "" = Kein Fach
@@ -214,4 +224,37 @@ export function resolveDeadline(choice: string, custom: Date | null): Date | nul
 /** Fehlertext für eine Deadline, die schon vorbei ist, sonst undefined. */
 export function deadlineError(deadline: Date | null, now: Date): string | undefined {
   return deadline && deadline.getTime() < now.getTime() ? "Liegt in der Vergangenheit" : undefined;
+}
+
+/** Formular → Anfrage für PATCH beim Bearbeiten: alle Felder, Leeres löscht den Wert.
+ *  Ein Inbox-To-do mit Fach setzt der Server dabei auf „open“ (einsortiert). */
+export function updatePayload(values: FormValues): TaskUpdate {
+  return {
+    title: values.title.trim(),
+    course_id: values.courseId === "" ? null : Number(values.courseId),
+    deadline: values.deadline ? values.deadline.toISOString() : null,
+    estimate_minutes: values.estimate === "" ? null : Number(values.estimate),
+    notes: values.notes.trim() === "" ? null : values.notes.trim(),
+  };
+}
+
+/** Rückmeldung nach dem Bearbeiten: „Einsortiert in AFE“, wenn es die Inbox verlassen hat. */
+export function updatedMessage(before: Task, after: Task, courses: Course[]): string {
+  const course = courses.find((item) => item.id === after.course_id);
+  if (before.status === "inbox" && after.status !== "inbox" && course)
+    return `Einsortiert in ${course.short_name}`;
+  return "Gespeichert";
+}
+
+/** Startwert des Deadline-Dropdowns für ein bestehendes To-do. */
+export function initialDeadlineChoice(deadline: string | null, presets: DeadlinePreset[]): string {
+  if (!deadline) return "";
+  const time = new Date(deadline).getTime();
+  return presets.find((preset) => new Date(preset.value).getTime() === time)?.value ?? "custom";
+}
+
+/** Dauer-Auswahl: Schnellwahl plus ein abweichender gespeicherter Wert (z. B. 50 Min.). */
+export function estimateOptions(current: number | null): number[] {
+  if (current === null || ESTIMATE_PRESETS.includes(current)) return ESTIMATE_PRESETS;
+  return [...ESTIMATE_PRESETS, current].sort((a, b) => a - b);
 }

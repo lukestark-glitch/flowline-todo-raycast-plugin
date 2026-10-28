@@ -6,8 +6,12 @@
   "icon": "extension-icon.png",
   "author": "lukestark",
   "license": "MIT",
-  "platforms": ["macOS"],
-  "categories": ["Productivity"],
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity"
+  ],
   "commands": [
     {
       "name": "quick-add",
@@ -37,6 +41,19 @@
       "subtitle": "ADS To-do",
       "description": "Offene To-dos in der Reihenfolge, in der man anfangen muss; abhaken, Fach ändern.",
       "mode": "view"
+    },
+    {
+      "name": "inbox",
+      "title": "To-do-Inbox",
+      "subtitle": "ADS To-do",
+      "description": "Noch nicht einsortierte To-dos; Enter öffnet das Formular mit Fach, Deadline, Dauer und Notizen.",
+      "mode": "view",
+      "keywords": [
+        "todo inbox",
+        "to-do inbox",
+        "inbox",
+        "einsortieren"
+      ]
     }
   ],
   "preferences": [

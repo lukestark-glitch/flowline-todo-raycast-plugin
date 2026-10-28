@@ -11,6 +11,7 @@ import {
   type Suggestion,
   type Task,
   type TaskCreate,
+  type TaskUpdate,
 } from "./lib/core";
 
 type Preferences = {
@@ -61,6 +62,10 @@ export function listTasks(): Promise<Task[]> {
   return request<Task[]>("/api/tasks");
 }
 
+export function listInbox(): Promise<Task[]> {
+  return request<Task[]>("/api/tasks?status=inbox&sort=created");
+}
+
 export function listCourses(): Promise<Course[]> {
   return request<Course[]>("/api/courses");
 }
@@ -73,7 +78,7 @@ export function createTask(data: TaskCreate | { title: string }): Promise<Task> 
   return request<Task>("/api/tasks", "POST", data);
 }
 
-export function updateTask(id: number, changes: Partial<Pick<Task, "status" | "course_id">>): Promise<Task> {
+export function updateTask(id: number, changes: TaskUpdate): Promise<Task> {
   return request<Task>(`/api/tasks/${id}`, "PATCH", changes);
 }
 
