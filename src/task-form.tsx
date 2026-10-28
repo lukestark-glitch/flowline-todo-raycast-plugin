@@ -15,7 +15,7 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { createTask, getSuggestion, listCourses, updateTask } from "./api";
 import {
@@ -47,17 +47,26 @@ type Props = {
 
 export function TaskForm({ task, onDone }: Props) {
   const { pop } = useNavigation();
-  const { data, isLoading } = usePromise(async () => {
-    // Beim Bearbeiten zählt die laufende Vorlesung nicht: Das To-do entstand früher
-    const [courses, suggestion] = await Promise.all([listCourses(), task ? null : getSuggestion()]);
-    return { courses, suggestion };
-  });
+  const { data, isLoading } = usePromise(
+    async () => {
+      // Beim Bearbeiten zählt die laufende Vorlesung nicht: Das To-do entstand früher
+      const [courses, suggestion] = await Promise.all([listCourses(), task ? null : getSuggestion()]);
+      return { courses, suggestion };
+    },
+    [],
+    {
+      // Vorschlag direkt beim Laden setzen (nicht erst über einen Effekt): Bis dahin
+      // kann niemand ein Fach gewählt haben, die Liste enthält nur „Kein Fach“
+      onData: ({ suggestion }) => {
+        if (suggestion) setCourseId(String(suggestion.course_id));
+      },
+    },
+  );
   const courses = data?.courses ?? [];
   const suggestion = data?.suggestion ?? null;
 
   const [presets] = useState(() => deadlinePresets(new Date()));
   const [courseId, setCourseId] = useState(task?.course_id != null ? String(task.course_id) : "");
-  const [courseTouched, setCourseTouched] = useState(false);
   const [titleError, setTitleError] = useState<string | undefined>();
   // Deadline: "" = keine, ISO-Text = Schnellwahl, "custom" = Datumsfeld darunter
   const [deadlineChoice, setDeadlineChoice] = useState(() =>
@@ -67,11 +76,6 @@ export function TaskForm({ task, onDone }: Props) {
     task?.deadline ? new Date(task.deadline) : null,
   );
   const [deadlineProblem, setDeadlineProblem] = useState<string | undefined>();
-
-  // Vorschlag übernehmen, sobald er da ist, aber keine Auswahl überschreiben
-  useEffect(() => {
-    if (suggestion && !courseTouched) setCourseId(String(suggestion.course_id));
-  }, [suggestion]);
 
   async function submit(values: Values) {
     if (values.title.trim() === "") {
@@ -141,9 +145,11 @@ export function TaskForm({ task, onDone }: Props) {
         title="Fach"
         value={courseId}
         autoFocus={task !== undefined}
+        // Raycast meldet beim ersten Anzeigen den Startwert als Änderung („Kein Fach“, weil
+        // die Fächer noch laden). Das würde den Vorschlag bzw. das gespeicherte Fach
+        // überschreiben; erst nach dem Laden zählen Änderungen als Auswahl.
         onChange={(value) => {
-          setCourseId(value);
-          setCourseTouched(true);
+          if (!isLoading) setCourseId(value);
         }}
       >
         {courses.map((course) => (
