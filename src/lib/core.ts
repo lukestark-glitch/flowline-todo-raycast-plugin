@@ -1,0 +1,185 @@
+// Reine Logik der Extension: Datentypen der API, Texte, Formular → Anfrage.
+// Bewusst ohne Raycast-Importe, damit `npm test` sie mit node --test prüfen kann.
+
+export type TaskStatus = "inbox" | "open" | "planned" | "in_progress" | "done" | "archived";
+
+export type Task = {
+  id: number;
+  title: string;
+  notes: string | null;
+  status: TaskStatus;
+  course_id: number | null;
+  event_id: number | null;
+  deadline: string | null;
+  estimate_minutes: number | null;
+  start_by: string | null;
+  created_at: string;
+  completed_at: string | null;
+  parent_id: number | null;
+};
+
+export type Course = {
+  id: number;
+  name: string;
+  short_name: string;
+  color: string;
+};
+
+// GET /api/capture/suggestion: laufende (oder höchstens 15 Min. vorbei) Vorlesung mit Fach
+export type Suggestion = {
+  course_id: number;
+  course_name: string;
+  short_name: string;
+  color: string;
+  event_id: number;
+  event_title: string;
+  event_start: string;
+  event_end: string;
+  running: boolean;
+};
+
+export type TaskCreate = {
+  title: string;
+  course_id: number | null;
+  event_id?: number;
+  deadline?: string;
+  estimate_minutes?: number;
+  notes?: string;
+};
+
+export type FormValues = {
+  title: string;
+  // Dropdown-Wert: ID als Text, "" = Kein Fach
+  courseId: string;
+  deadline: Date | null;
+  // Dropdown-Wert: Minuten als Text, "" = keine Angabe
+  estimate: string;
+  notes: string;
+};
+
+export const ESTIMATE_PRESETS = [15, 30, 45, 60, 90, 120, 180];
+
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/** Fehlertext, wenn der Token über diese Adresse nicht geschickt werden darf, sonst null. */
+export function checkApiUrl(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "Server-Adresse ungültig. Beispiel: http://localhost:8000";
+  }
+  if (parsed.protocol === "https:") return null;
+  if (parsed.protocol === "http:" && LOCAL_HOSTS.has(parsed.hostname)) return null;
+  return "Online nur mit https://, sonst kann jemand den API-Token mitlesen.";
+}
+
+/** Fehlermeldung aus einer FastAPI-Antwort ({"detail": "…"} oder Liste von Feldfehlern). */
+export function describeError(status: number, body: unknown): string {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail
+      .map((item: { loc?: unknown[]; msg?: string }) => {
+        const field = item.loc?.[item.loc.length - 1];
+        return typeof field === "string" ? `${field}: ${item.msg}` : (item.msg ?? "ungültig");
+      })
+      .join("; ");
+  }
+  return `Fehler ${status} vom Server`;
+}
+
+/** Formular → Anfrage für POST /api/tasks. course_id geht immer mit (null = bewusst ohne
+ *  Fach), event_id nur, solange das vorgeschlagene Fach gewählt ist. */
+export function createPayload(values: FormValues, suggestion: Suggestion | null): TaskCreate {
+  const payload: TaskCreate = {
+    title: values.title.trim(),
+    course_id: values.courseId === "" ? null : Number(values.courseId),
+  };
+  if (suggestion && String(suggestion.course_id) === values.courseId) payload.event_id = suggestion.event_id;
+  if (values.deadline) payload.deadline = values.deadline.toISOString();
+  if (values.estimate !== "") payload.estimate_minutes = Number(values.estimate);
+  if (values.notes.trim() !== "") payload.notes = values.notes.trim();
+  return payload;
+}
+
+/** Rückmeldung nach dem Speichern, z. B. „Gespeichert in AFE“. */
+export function savedMessage(task: Task, courses: Course[]): string {
+  const course = courses.find((item) => item.id === task.course_id);
+  if (course) return `Gespeichert in ${course.short_name}`;
+  return task.status === "inbox" ? "In der Inbox gespeichert" : "Gespeichert ohne Fach";
+}
+
+/** Status beim Rückgängigmachen des Abhakens: wie in der Web-App, mit Fach offen, sonst Inbox. */
+export function reopenStatus(task: Task): TaskStatus {
+  return task.course_id !== null ? "open" : "inbox";
+}
+
+/** "anfangen bis" ist vorbei, bald (innerhalb von zwei Tagen) oder später. */
+export function startByState(task: Task, now: Date): "overdue" | "soon" | "later" | null {
+  if (!task.start_by) return null;
+  const startBy = new Date(task.start_by).getTime();
+  if (startBy < now.getTime()) return "overdue";
+  return startBy - now.getTime() <= 2 * 24 * 60 * 60 * 1000 ? "soon" : "later";
+}
+
+/** 45 → "45 Min.", 90 → "1 Std. 30 Min." (wie die Web-App). */
+export function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} Min.`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} Std. ${rest} Min.` : `${hours} Std.`;
+}
+
+const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const MONTHS = [
+  "Jan.",
+  "Feb.",
+  "März",
+  "Apr.",
+  "Mai",
+  "Juni",
+  "Juli",
+  "Aug.",
+  "Sept.",
+  "Okt.",
+  "Nov.",
+  "Dez.",
+];
+
+function localParts(date: Date, timeZone: string | undefined) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: get("year"),
+    month: get("month"),
+    day: get("day"),
+    hour: get("hour"),
+    minute: get("minute"),
+  };
+}
+
+/** Zeitpunkt kurz und relativ: "heute 23:59", "morgen 10:00", "Fr, 6. Nov. 23:59".
+ *  timeZone nur für Tests; sonst die Zeitzone des Macs. */
+export function formatWhen(iso: string, now: Date, timeZone?: string): string {
+  const target = localParts(new Date(iso), timeZone);
+  const today = localParts(now, timeZone);
+  const offset = Math.round(
+    (Date.UTC(target.year, target.month - 1, target.day) - Date.UTC(today.year, today.month - 1, today.day)) /
+      86_400_000,
+  );
+  const clock = `${String(target.hour).padStart(2, "0")}:${String(target.minute).padStart(2, "0")}`;
+  if (offset === 0) return `heute ${clock}`;
+  if (offset === 1) return `morgen ${clock}`;
+  if (offset === -1) return `gestern ${clock}`;
+  const weekday = WEEKDAYS[new Date(Date.UTC(target.year, target.month - 1, target.day)).getUTCDay()];
+  return `${weekday}, ${target.day}. ${MONTHS[target.month - 1]} ${clock}`;
+}
