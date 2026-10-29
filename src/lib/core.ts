@@ -1,7 +1,7 @@
 // Reine Logik der Extension: Datentypen der API, Texte, Formular → Anfrage.
 // Bewusst ohne Raycast-Importe, damit `npm test` sie mit node --test prüfen kann.
 
-export type TaskStatus = "inbox" | "open" | "planned" | "in_progress" | "done" | "archived";
+export type TaskStatus = "inbox" | "open" | "planned" | "in_progress" | "paused" | "done" | "archived";
 
 export type Task = {
   id: number;
