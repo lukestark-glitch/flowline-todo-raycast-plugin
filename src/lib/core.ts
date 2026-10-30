@@ -16,7 +16,15 @@ export type Task = {
   created_at: string;
   completed_at: string | null;
   parent_id: number | null;
+  // Kurz, was gespeichert wurde, z. B. „Mathe 1 · Übungsblatt · 1 Std. 30 Min. · fällig Fr 23:59“
+  // (ältere Server ohne das Feld: undefined)
+  summary?: string;
 };
+
+// Schnell-Syntax am Ende des Titels (Server: app/title_syntax.py), als Hinweis beim Tippen
+export const SYNTAX_HINT =
+  "Am Ende des Titels: #mat1 Fach (Kürzel) · #Übungsblatt Art · #d90 bzw. #d1h30 Dauer · " +
+  "#Tmorgen, #Tfr, #T+3, #T31.10, #Tfr-14 Deadline · sonst #wichtig als Tag";
 
 export type Course = {
   id: number;
@@ -113,8 +121,10 @@ export function createPayload(values: FormValues, suggestion: Suggestion | null)
   return payload;
 }
 
-/** Rückmeldung nach dem Speichern, z. B. „Gespeichert in AFE“. */
+/** Rückmeldung nach dem Speichern: die Zusammenfassung des Servers („Gespeichert: Mathe 1 ·
+ *  Übungsblatt · 1 Std. 30 Min.“), bei älteren Servern z. B. „Gespeichert in AFE“. */
 export function savedMessage(task: Task, courses: Course[]): string {
+  if (task.summary) return `Gespeichert: ${task.summary}`;
   const course = courses.find((item) => item.id === task.course_id);
   if (course) return `Gespeichert in ${course.short_name}`;
   return task.status === "inbox" ? "In der Inbox gespeichert" : "Gespeichert ohne Fach";

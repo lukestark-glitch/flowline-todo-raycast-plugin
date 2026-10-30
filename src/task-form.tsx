@@ -27,6 +27,7 @@ import {
   initialDeadlineChoice,
   resolveDeadline,
   savedMessage,
+  SYNTAX_HINT,
   updatedMessage,
   updatePayload,
   type Task,
@@ -134,7 +135,8 @@ export function TaskForm({ task, onDone }: Props) {
       <Form.TextField
         id="title"
         title="Titel"
-        placeholder="Neues To-do"
+        placeholder="Neues To-do, z. B. Blatt 3 #mat1 #d90 #Tfr"
+        info={SYNTAX_HINT}
         defaultValue={task?.title}
         autoFocus={!task}
         error={titleError}

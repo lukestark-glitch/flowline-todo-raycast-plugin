@@ -133,6 +133,15 @@ test("optional fields only when filled", () => {
 
 // --- Texte --------------------------------------------------------------------------
 
+test("saved message shows the server summary", () => {
+  const saved = task({
+    course_id: 3,
+    status: "open",
+    summary: "AFE · Quiz/Test · 30 Min. · fällig morgen 23:59",
+  });
+  assert.equal(savedMessage(saved, [AFE]), "Gespeichert: AFE · Quiz/Test · 30 Min. · fällig morgen 23:59");
+});
+
 test("saved message names the course or the inbox", () => {
   assert.equal(savedMessage(task({ course_id: 3, status: "open" }), [AFE]), "Gespeichert in AFE");
   assert.equal(savedMessage(task(), [AFE]), "In der Inbox gespeichert");

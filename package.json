@@ -17,12 +17,12 @@
       "name": "quick-add",
       "title": "Blitz-Erfassen",
       "subtitle": "ADS To-do",
-      "description": "To-do nur mit Titel notieren; das Fach der laufenden Vorlesung ordnet der Server zu.",
+      "description": "To-do nur mit Titel notieren; das Fach der laufenden Vorlesung ordnet der Server zu. Am Ende des Titels: #mat1 Fach, #d90 Dauer, #Tfr Deadline, #Übungsblatt Art.",
       "mode": "no-view",
       "arguments": [
         {
           "name": "title",
-          "placeholder": "To-do",
+          "placeholder": "To-do #mat1 #d90 #Tfr",
           "type": "text",
           "required": true
         }
