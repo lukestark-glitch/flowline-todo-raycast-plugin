@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  authMessage,
   checkApiUrl,
   createPayload,
   deadlineError,
@@ -261,4 +262,23 @@ test("unusual saved estimate stays selectable", () => {
   assert.deepEqual(estimateOptions(null), [15, 30, 45, 60, 90, 120, 180]);
   assert.deepEqual(estimateOptions(60), [15, 30, 45, 60, 90, 120, 180]);
   assert.deepEqual(estimateOptions(50), [15, 30, 45, 50, 60, 90, 120, 180]);
+});
+
+test("authMessage: widerrufener persönlicher Token", () => {
+  const message = authMessage(401, { detail: "Nicht angemeldet" }, "adt_abc");
+  assert.match(message ?? "", /ungültig oder widerrufen/);
+  assert.match(message ?? "", /Einstellungen → Integrationen/);
+});
+
+test("authMessage: alter globaler Token und leerer Token", () => {
+  assert.match(authMessage(401, null, "x".repeat(40)) ?? "", /persönlichen Token/);
+  assert.match(authMessage(401, null, "  ") ?? "", /Kein API-Token/);
+});
+
+test("authMessage: 403 mit Grund vom Server, sonst nichts", () => {
+  assert.equal(
+    authMessage(403, { detail: "E-Mail-Adresse noch nicht bestätigt" }, "adt_abc"),
+    "Anmeldung abgelehnt: E-Mail-Adresse noch nicht bestätigt",
+  );
+  assert.equal(authMessage(404, { detail: "nicht gefunden" }, "adt_abc"), null);
 });

@@ -68,7 +68,7 @@
     {
       "name": "apiToken",
       "title": "API-Token",
-      "description": "Derselbe Wert wie API_TOKEN in backend/.env.",
+      "description": "Persönlicher Token aus der Web-App: Einstellungen → Integrationen → Token erstellen (beginnt mit adt_).",
       "type": "password",
       "required": true
     }

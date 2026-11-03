@@ -107,6 +107,24 @@ export function describeError(status: number, body: unknown): string {
   return `Fehler ${status} vom Server`;
 }
 
+/** Antwort von GET /api/me: wer angemeldet ist; token = Name des persönlichen Tokens. */
+export type Me = { auth: string; name: string; email: string; token: string | null };
+
+const NEW_TOKEN_HINT =
+  "In der Web-App unter Einstellungen → Integrationen einen Token erstellen und in den Einstellungen der Extension eintragen (⌘,).";
+
+/** Verständliche Meldung, wenn der Server die Anmeldung ablehnt (401/403), sonst null.
+ *  Persönliche Tokens beginnen mit adt_; alles andere ist der alte, globale API_TOKEN. */
+export function authMessage(status: number, body: unknown, token: string): string | null {
+  if (status === 401) {
+    if (!token.trim()) return `Kein API-Token eingetragen. ${NEW_TOKEN_HINT}`;
+    if (token.trim().startsWith("adt_")) return `Token ungültig oder widerrufen. ${NEW_TOKEN_HINT}`;
+    return `Token abgelehnt. Bitte einen persönlichen Token verwenden (beginnt mit adt_). ${NEW_TOKEN_HINT}`;
+  }
+  if (status === 403) return `Anmeldung abgelehnt: ${describeError(status, body)}`;
+  return null;
+}
+
 /** Formular → Anfrage für POST /api/tasks. course_id geht immer mit (null = bewusst ohne
  *  Fach), event_id nur, solange das vorgeschlagene Fach gewählt ist. */
 export function createPayload(values: FormValues, suggestion: Suggestion | null): TaskCreate {

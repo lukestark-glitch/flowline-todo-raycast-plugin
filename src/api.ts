@@ -5,8 +5,10 @@
 import { getPreferenceValues } from "@raycast/api";
 
 import {
+  authMessage,
   checkApiUrl,
   describeError,
+  type Me,
   type Course,
   type Suggestion,
   type Task,
@@ -47,15 +49,18 @@ async function request<T>(path: string, method = "GET", body?: unknown): Promise
     throw new Error(`Server unter ${base} nicht erreichbar. Läuft das Backend?`);
   }
 
-  if (response.status === 401) {
-    throw new Error("API-Token abgelehnt. In den Einstellungen der Extension prüfen (⌘,).");
-  }
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    throw new Error(describeError(response.status, data));
+    const token = getPreferenceValues<Preferences>().apiToken;
+    throw new Error(authMessage(response.status, data, token) ?? describeError(response.status, data));
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+/** Wer mit diesem Token angemeldet ist; die Listen prüfen damit beim Start den Token. */
+export function getMe(): Promise<Me> {
+  return request<Me>("/api/me");
 }
 
 export function listTasks(): Promise<Task[]> {

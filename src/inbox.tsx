@@ -9,8 +9,11 @@ import { listCourses, listInbox } from "./api";
 import { formatWhen } from "./lib/core";
 import { CourseSubmenu, DeleteAction, useTaskActions } from "./task-actions";
 import { TaskForm } from "./task-form";
+import { useTokenCheck } from "./token-check";
 
 export default function Command() {
+  // Erst den Token prüfen (widerrufen? dann eine klare Meldung), dann laden
+  const token = useTokenCheck();
   const {
     data: tasks = [],
     isLoading,
@@ -18,14 +21,15 @@ export default function Command() {
     revalidate,
   } = useCachedPromise(listInbox, [], {
     keepPreviousData: true,
+    execute: token.ready,
   });
-  const { data: courses = [] } = useCachedPromise(listCourses);
+  const { data: courses = [] } = useCachedPromise(listCourses, [], { execute: token.ready });
   const { complete, changeCourse, remove } = useTaskActions(mutate, courses, { dropSortedIn: true });
   const now = new Date();
 
   return (
     <List
-      isLoading={isLoading}
+      isLoading={token.checking || isLoading}
       navigationTitle={`Inbox (${tasks.length})`}
       searchBarPlaceholder="Inbox durchsuchen"
     >

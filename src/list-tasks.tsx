@@ -10,6 +10,7 @@ import { listCourses, listTasks, webUrl } from "./api";
 import { formatMinutes, formatWhen, startByState, type Course, type Task } from "./lib/core";
 import { CourseSubmenu, DeleteAction, useTaskActions } from "./task-actions";
 import { TaskForm } from "./task-form";
+import { useTokenCheck } from "./token-check";
 
 export function accessories(task: Task, now: Date): List.Item.Accessory[] {
   const items: List.Item.Accessory[] = [];
@@ -36,6 +37,8 @@ export function taskIcon(task: Task, course: Course | undefined): List.Item.Prop
 }
 
 export default function Command() {
+  // Erst den Token prüfen (widerrufen? dann eine klare Meldung), dann laden
+  const token = useTokenCheck();
   const {
     data: tasks = [],
     isLoading,
@@ -43,8 +46,9 @@ export default function Command() {
     revalidate,
   } = useCachedPromise(listTasks, [], {
     keepPreviousData: true,
+    execute: token.ready,
   });
-  const { data: courses = [] } = useCachedPromise(listCourses);
+  const { data: courses = [] } = useCachedPromise(listCourses, [], { execute: token.ready });
   // "all", "inbox" oder die ID eines Fachs
   const [filter, setFilter] = useState("all");
   const now = new Date();
@@ -70,7 +74,7 @@ export default function Command() {
 
   return (
     <List
-      isLoading={isLoading}
+      isLoading={token.checking || isLoading}
       searchBarPlaceholder="To-dos durchsuchen"
       searchBarAccessory={
         <List.Dropdown tooltip="Anzeigen" storeValue onChange={setFilter}>
