@@ -79,6 +79,15 @@ export const ESTIMATE_PRESETS = [15, 30, 45, 60, 90, 120, 180];
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
+/** Server-Adresse aus den Einstellungen ohne Schrägstrich und ohne „/api“ am Ende (die Web-App
+ *  zeigt die API-Adresse mit /api; die Extension hängt die Pfade selbst an). */
+export function normalizeBaseUrl(url: string): string {
+  return url
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/api$/i, "");
+}
+
 /** Fehlertext, wenn der Token über diese Adresse nicht geschickt werden darf, sonst null. */
 export function checkApiUrl(url: string): string | null {
   let parsed: URL;

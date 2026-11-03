@@ -12,6 +12,7 @@ import {
   describeError,
   formatMinutes,
   formatWhen,
+  normalizeBaseUrl,
   reopenStatus,
   resolveDeadline,
   savedMessage,
@@ -281,4 +282,12 @@ test("authMessage: 403 mit Grund vom Server, sonst nichts", () => {
     "Anmeldung abgelehnt: E-Mail-Adresse noch nicht bestätigt",
   );
   assert.equal(authMessage(404, { detail: "nicht gefunden" }, "adt_abc"), null);
+});
+
+test("normalizeBaseUrl: ohne Schrägstrich und ohne /api am Ende", () => {
+  const base = "https://ads-todo-staging.onrender.com";
+  for (const url of [base, `${base}/`, `${base}/api`, `${base}/api/`, ` ${base}/API `]) {
+    assert.equal(normalizeBaseUrl(url), base);
+  }
+  assert.equal(normalizeBaseUrl("http://localhost:8000"), "http://localhost:8000");
 });

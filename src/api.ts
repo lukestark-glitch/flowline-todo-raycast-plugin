@@ -8,6 +8,7 @@ import {
   authMessage,
   checkApiUrl,
   describeError,
+  normalizeBaseUrl,
   type Me,
   type Course,
   type Suggestion,
@@ -25,7 +26,7 @@ type Preferences = {
 const TIMEOUT_MS = 60_000;
 
 export function baseUrl(): string {
-  return getPreferenceValues<Preferences>().apiUrl.trim().replace(/\/+$/, "");
+  return normalizeBaseUrl(getPreferenceValues<Preferences>().apiUrl);
 }
 
 async function request<T>(path: string, method = "GET", body?: unknown): Promise<T> {

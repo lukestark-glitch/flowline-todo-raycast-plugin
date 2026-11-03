@@ -60,7 +60,7 @@
     {
       "name": "apiUrl",
       "title": "Server-Adresse",
-      "description": "Adresse des Backends. Lokal http://localhost:8000, online nur https://.",
+      "description": "Adresse der App ohne /api, z. B. https://ads-todo-staging.onrender.com. Lokal http://localhost:8000, online nur https://.",
       "type": "textfield",
       "required": true,
       "default": "http://localhost:8000"
