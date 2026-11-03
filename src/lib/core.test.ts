@@ -75,8 +75,8 @@ function form(fields: Partial<FormValues> = {}): FormValues {
 test("token goes only to https or localhost", () => {
   assert.equal(checkApiUrl("http://localhost:8000"), null);
   assert.equal(checkApiUrl("http://127.0.0.1:8000"), null);
-  assert.equal(checkApiUrl("https://ads-todo.onrender.com"), null);
-  assert.match(checkApiUrl("http://ads-todo.onrender.com") ?? "", /https/);
+  assert.equal(checkApiUrl("https://flowline.example.com"), null);
+  assert.match(checkApiUrl("http://flowline.example.com") ?? "", /https/);
   assert.match(checkApiUrl("http://localhost.evil.example") ?? "", /https/);
   assert.match(checkApiUrl("localhost:8000") ?? "", /https|ungültig/);
   assert.match(checkApiUrl("kein url") ?? "", /ungültig/);
@@ -285,7 +285,7 @@ test("authMessage: 403 mit Grund vom Server, sonst nichts", () => {
 });
 
 test("normalizeBaseUrl: ohne Schrägstrich und ohne /api am Ende", () => {
-  const base = "https://ads-todo-staging.onrender.com";
+  const base = "https://flowline.example.com";
   for (const url of [base, `${base}/`, `${base}/api`, `${base}/api/`, ` ${base}/API `]) {
     assert.equal(normalizeBaseUrl(url), base);
   }

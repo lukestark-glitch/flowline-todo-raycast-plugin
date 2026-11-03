@@ -1,10 +1,10 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "ads-todo",
-  "title": "ADS To-do",
-  "description": "To-dos fürs Studium erfassen, ansehen und abhaken (persönliche ADS To-do App)",
-  "icon": "extension-icon.png",
-  "author": "lukestark",
+  "name": "flowline-todo",
+  "title": "Flowline ToDo",
+  "description": "To-dos fürs Studium mit Flowline ToDo erfassen, ansehen und abhaken; das Fach der laufenden Vorlesung wird automatisch zugeordnet.",
+  "icon": "icon.png",
+  "author": "luke_stark",
   "license": "MIT",
   "platforms": [
     "macOS"
@@ -16,7 +16,7 @@
     {
       "name": "quick-add",
       "title": "Blitz-Erfassen",
-      "subtitle": "ADS To-do",
+      "subtitle": "Flowline ToDo",
       "description": "To-do nur mit Titel notieren; das Fach der laufenden Vorlesung ordnet der Server zu. Am Ende des Titels: #mat1 Fach, #d90 Dauer, #Tfr Deadline, #Übungsblatt Art.",
       "mode": "no-view",
       "arguments": [
@@ -31,21 +31,21 @@
     {
       "name": "add-task",
       "title": "To-do hinzufügen",
-      "subtitle": "ADS To-do",
+      "subtitle": "Flowline ToDo",
       "description": "Formular mit Fach (vorausgewählt), Deadline, Dauer und Notizen.",
       "mode": "view"
     },
     {
       "name": "list-tasks",
       "title": "To-dos anzeigen",
-      "subtitle": "ADS To-do",
+      "subtitle": "Flowline ToDo",
       "description": "Offene To-dos in der Reihenfolge, in der man anfangen muss; abhaken, Fach ändern.",
       "mode": "view"
     },
     {
       "name": "inbox",
       "title": "To-do-Inbox",
-      "subtitle": "ADS To-do",
+      "subtitle": "Flowline ToDo",
       "description": "Noch nicht einsortierte To-dos; Enter öffnet das Formular mit Fach, Deadline, Dauer und Notizen.",
       "mode": "view",
       "keywords": [
@@ -60,7 +60,7 @@
     {
       "name": "apiUrl",
       "title": "Server-Adresse",
-      "description": "Adresse der App ohne /api, z. B. https://ads-todo-staging.onrender.com. Lokal http://localhost:8000, online nur https://.",
+      "description": "Adresse der App ohne /api, z. B. https://flowline.example.com. Lokal http://localhost:8000, online nur https://.",
       "type": "textfield",
       "required": true,
       "default": "http://localhost:8000"
