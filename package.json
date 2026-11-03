@@ -26,6 +26,15 @@
           "type": "text",
           "required": true
         }
+      ],
+      "keywords": [
+        "quick add",
+        "add",
+        "todo",
+        "to-do",
+        "blitz",
+        "notieren",
+        "schnell"
       ]
     },
     {
@@ -33,14 +42,34 @@
       "title": "To-do hinzufügen",
       "subtitle": "Flowline ToDo",
       "description": "Formular mit Fach (vorausgewählt), Deadline, Dauer und Notizen.",
-      "mode": "view"
+      "mode": "view",
+      "keywords": [
+        "add",
+        "add todo",
+        "add task",
+        "new",
+        "neu",
+        "todo",
+        "to-do",
+        "hinzufügen",
+        "erstellen"
+      ]
     },
     {
       "name": "list-tasks",
       "title": "To-dos anzeigen",
       "subtitle": "Flowline ToDo",
       "description": "Offene To-dos in der Reihenfolge, in der man anfangen muss; abhaken, Fach ändern.",
-      "mode": "view"
+      "mode": "view",
+      "keywords": [
+        "list",
+        "todos",
+        "to-dos",
+        "tasks",
+        "anzeigen",
+        "liste",
+        "offen"
+      ]
     },
     {
       "name": "inbox",
