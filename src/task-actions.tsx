@@ -33,7 +33,7 @@ export function useTaskActions(
       toast.title = `Abgehakt: ${task.title}`;
       toast.primaryAction = {
         title: "Rückgängig",
-        shortcut: { modifiers: ["cmd"], key: "z" },
+        shortcut: { macOS: { modifiers: ["cmd"], key: "z" }, Windows: { modifiers: ["ctrl"], key: "z" } },
         onAction: async (current) => {
           current.hide();
           await reopen(task);

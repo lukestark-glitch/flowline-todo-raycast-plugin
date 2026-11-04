@@ -55,7 +55,10 @@ export default function Command() {
                 <Action
                   title="Abhaken"
                   icon={Icon.CheckCircle}
-                  shortcut={{ modifiers: ["cmd"], key: "d" }}
+                  shortcut={{
+                    macOS: { modifiers: ["cmd"], key: "d" },
+                    Windows: { modifiers: ["ctrl"], key: "d" },
+                  }}
                   onAction={() => complete(task)}
                 />
               </ActionPanel.Section>

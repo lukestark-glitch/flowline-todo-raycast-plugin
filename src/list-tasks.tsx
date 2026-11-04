@@ -117,7 +117,10 @@ export default function Command() {
                   <Action.Push
                     title="Bearbeiten"
                     icon={Icon.Pencil}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "e" }}
+                    shortcut={{
+                      macOS: { modifiers: ["cmd", "shift"], key: "e" },
+                      Windows: { modifiers: ["ctrl", "shift"], key: "e" },
+                    }}
                     target={<TaskForm task={task} onDone={revalidate} />}
                   />
                   <Action.OpenInBrowser
