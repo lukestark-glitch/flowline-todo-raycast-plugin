@@ -4,9 +4,7 @@
 
 Das Widget hat **keinen Hintergrund und keinen Rahmen**: Es besteht nur aus Text, drei Knöpfen und einer Fortschrittsleiste, die direkt auf deinem Schreibtisch-Hintergrundbild „schweben“. Es liegt **über dem Hintergrundbild und den Schreibtisch-Symbolen**, aber **unter allen normalen Fenstern** – es stört also nie beim Arbeiten. Und es ist auf **allen Spaces** (virtuellen Schreibtischen) sichtbar.
 
-![MusicDesk auf dem Schreibtisch](docs/screenshot.png)
-
-> **Hinweis:** `docs/screenshot.png` ist ein Platzhalter und wird noch durch einen echten Screenshot ersetzt.
+> **Screenshot-Platzhalter:** Hier kommt ein Bildschirmfoto des Widgets hin (geplant als `docs/screenshot.png`, noch nicht vorhanden).
 
 ---
 
@@ -139,13 +137,14 @@ Das Ergebnis liegt dann in `dist/MusicDesk.app` und als ZIP in `dist/MusicDesk-1
 | **Wiedergabe / Pause** | Mittlerer Knopf (▶ / ❚❚) |
 | **Vorheriger / nächster Song** | Linker bzw. rechter Knopf (◀◀ / ▶▶) |
 | **Im Song springen** | Auf die Fortschrittsleiste klicken oder den Regler ziehen |
-| **Einstellungen** | **Rechtsklick** auf Titel, Knöpfe oder Leiste öffnet das Menü |
+| **Einstellungen** | **Rechtsklick** (oder Ctrl-Klick) auf Titel, Knöpfe oder Leiste öffnet das Menü |
 
 **Das Rechtsklick-Menü:**
 
 - **Farbe** → *Schwarz*, *Weiß* oder *Automatisch* (passt sich dem hellen/dunklen Modus von macOS an). Standard ist Schwarz.
 - **Position sperren** – verhindert versehentliches Verschieben.
 - **Beim Login starten** – Autostart ein/aus.
+- **Über MusicDesk** – Versionsinfo.
 - **MusicDesk beenden**
 
 Wenn Apple Music geschlossen ist oder nichts abspielt, zeigt das Widget **„Nichts läuft“**.
@@ -252,15 +251,16 @@ MusicDesk-Widget/
 │   └── UI/                        # NSPanel-Fenster + SwiftUI-WidgetView
 ├── Resources/
 │   ├── Info.plist                 # Bundle-ID com.musicdesk.widget, LSUIElement
-│   └── AppIcon.icns               # wird von scripts/make_icon.py erzeugt
+│   ├── AppIcon.icns               # wird von scripts/make_icon.py erzeugt
+│   └── AppIcon.png                # Icon als PNG (1024 px)
 ├── scripts/
 │   ├── build.sh                   # Universal-Build + App-Bundle + Ad-hoc-Signatur + ZIP
 │   ├── install.sh                 # bauen und nach /Applications installieren
 │   ├── uninstall.sh               # vollständig entfernen
+│   ├── check-bundle.sh            # prüft das fertige App-Bundle (Info.plist, Architekturen, Signatur)
 │   └── make_icon.py               # App-Icon programmatisch erzeugen (Pillow)
 ├── docs/
-│   ├── ENTSCHEIDUNGEN.md          # Design- und Technik-Entscheidungen
-│   └── screenshot.png             # Platzhalter
+│   └── ENTSCHEIDUNGEN.md          # Design- und Technik-Entscheidungen
 ├── LICENSE
 └── README.md
 ```
@@ -282,7 +282,7 @@ Hintergründe zu den einzelnen Entscheidungen: [docs/ENTSCHEIDUNGEN.md](docs/ENT
 
 ### CI
 
-Der Workflow [`.github/workflows/musicdesk.yml`](../.github/workflows/musicdesk.yml) läuft auf einem macOS-Runner bei jedem Push/Pull-Request, der `MusicDesk-Widget/**` betrifft, sowie manuell (*workflow_dispatch*). Er baut die App mit `scripts/build.sh`, prüft Architekturen (`lipo`), Signatur (`codesign -v`) und `Info.plist` und lädt die ZIP als Artefakt hoch.
+Der Workflow [`.github/workflows/musicdesk.yml`](../.github/workflows/musicdesk.yml) läuft auf einem macOS-Runner bei jedem Push/Pull-Request, der `MusicDesk-Widget/**` betrifft, bei Tags `musicdesk-v*` sowie manuell (*workflow_dispatch*). Er baut die App mit `scripts/build.sh`, prüft Architekturen (`lipo`), Signatur (`codesign -v`) und `Info.plist` und lädt die ZIP als Artefakt hoch.
 
 ### Release erstellen
 
@@ -291,7 +291,7 @@ git tag musicdesk-v1.0.0
 git push origin musicdesk-v1.0.0
 ```
 
-Der Workflow baut dann die App und legt automatisch ein GitHub-Release mit `MusicDesk-1.0.0.zip` an. Für eine neue Version vorher `CFBundleShortVersionString`/`CFBundleVersion` in `Resources/Info.plist` (und den ZIP-Namen in `scripts/build.sh`) anpassen.
+Der Workflow baut dann die App und legt automatisch ein GitHub-Release mit `MusicDesk-1.0.0.zip` an. Für eine neue Version vorher `CFBundleShortVersionString`/`CFBundleVersion` in `Resources/Info.plist` anpassen – `scripts/build.sh` liest die Version von dort und benennt die ZIP entsprechend (`MusicDesk-<Version>.zip`).
 
 ---
 

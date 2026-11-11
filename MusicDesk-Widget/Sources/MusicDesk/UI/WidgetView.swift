@@ -18,7 +18,8 @@ enum WidgetLayout {
     static let titleFontSize: CGFloat = 26
     static let minimumTitleGap: CGFloat = 20
     static let buttonSpacing: CGFloat = 15
-    static let buttonGlyphSize: CGFloat = 26
+    /// Font size of the SF Symbols; renders the glyph box at roughly 26 pt height.
+    static let buttonGlyphSize: CGFloat = 24
     static let buttonHitSize: CGFloat = 36
 
     /// Practically invisible fill that makes transparent areas hit-testable

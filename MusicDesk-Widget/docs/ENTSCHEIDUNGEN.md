@@ -16,7 +16,7 @@ Dieses Dokument hält fest, **was** bei MusicDesk wie gelöst wurde und **warum*
 **Wie:**
 - `NSAppleScript` ist nicht thread-sicher. Alle Skripte werden deshalb auf **einer eigenen seriellen Hintergrund-`DispatchQueue`** einmal kompiliert und dort wiederverwendet. Ergebnisse gehen zurück an den Main Actor. Die Oberfläche blockiert nie, auch wenn Music hängt.
 - Das Abfrage-Skript gibt eine **AppleScript-Liste** `{state, name, artist, position, duration}` zurück. Diese wird als `NSAppleEventDescriptor`-Liste ausgelesen (`atIndex(1)` …, `doubleValue` für Zahlen). So umgehen wir Probleme mit Zahl→Text-Umwandlung (Dezimalkomma bei deutscher Systemsprache) und mit Trennzeichen im Songtitel.
-- Der Status wird im Skript mit `(player state as text)` zu `"playing"`/`"paused"`/`"stopped"`; der Zugriff auf `current track` ist in `try` gekapselt, weil es im Zustand „gestoppt“ keinen aktuellen Titel gibt.
+- Der Status wird im Skript per Vergleich (`if ps is playing …`) zu `"playing"`/`"paused"`/`"stopped"` umgesetzt (unabhängig von der Systemsprache); der Zugriff auf `current track` ist in `try` gekapselt, weil es im Zustand „gestoppt“ keinen aktuellen Titel gibt.
 - Fehlt die Erlaubnis (Fehler −1743), zeigt das Widget den Leerlauf-Zustand, meldet den Fehler nicht wiederholt und versucht es bei der nächsten Abfrage erneut.
 
 ## 2. Apple Music wird nie gestartet
